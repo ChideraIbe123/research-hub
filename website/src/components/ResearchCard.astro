@@ -1,0 +1,59 @@
+---
+import { formatDate } from '../utils/date';
+
+interface Props {
+  title: string;
+  authors: string[];
+  abstract: string;
+  date: Date;
+  journal: string;
+  link: string;
+  index: number;
+}
+
+const { title, authors, abstract, date, journal, link, index } = Astro.props;
+---
+
+<article class="article-card group h-full" data-index={index}>
+  <div class="relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col transform hover:-translate-y-1">
+    <a href={`/paper/${index}`} class="block h-full p-4 sm:p-6 flex flex-col flex-grow">
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <span class="px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800 rounded-full">
+          {journal}
+        </span>
+        <time class="text-sm text-gray-500">
+          {formatDate(date)}
+        </time>
+      </div>
+
+      <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-2">
+        {title}
+      </h2>
+
+      <div class="mb-3">
+        <p class="text-sm text-gray-600 line-clamp-1">
+          {authors.join(', ')}
+        </p>
+      </div>
+
+      <p class="text-gray-700 text-sm line-clamp-3 mb-4 flex-grow">
+        {abstract}
+      </p>
+
+      <div class="flex justify-between items-center mt-auto">
+        <button 
+          class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors chat-trigger"
+          onclick="event.preventDefault(); event.stopPropagation();"
+        >
+          Discuss with AI
+        </button>
+        <span class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors group-hover:translate-x-1 duration-300">
+          Read Details
+          <svg class="w-4 h-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </span>
+      </div>
+    </a>
+  </div>
+</article>

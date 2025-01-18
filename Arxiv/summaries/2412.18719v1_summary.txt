@@ -1,1 +1,0 @@
-The LLM has no guidance or context on how the grading should be done. It is only provided with the total points for each question. The second prompt builds on the first approach by adding the instructor-provided rubric for each of the questions in addition to the correct answer.
