@@ -1,0 +1,150 @@
+---
+import LoadingSpinner from './LoadingSpinner.astro';
+
+interface Props {
+  isOpen: boolean;
+}
+
+const { isOpen } = Astro.props;
+---
+<div 
+  id="chatSidebar" 
+  class:list={[
+    "fixed top-0 right-0 h-full bg-white shadow-xl transition-all duration-300 flex flex-col z-50",
+    isOpen ? "translate-x-0" : "translate-x-full"
+  ]}
+  style="width: 400px; min-width: 300px; max-width: 600px;"
+>
+  <div class="flex items-center justify-between p-4 border-b">
+    <h3 class="font-semibold text-lg">Research Assistant</h3>
+    <div class="flex items-center gap-2">
+      <div id="resizeHandle" class="cursor-ew-resize px-2 py-4 hover:bg-gray-100 rounded">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-400">
+          <path d="M8 18V6M16 18V6"></path>
+        </svg>
+      </div>
+      <button id="closeChatBtn" class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
+    <div class="bg-indigo-50 rounded-lg p-3 max-w-[80%]">
+      <p class="text-sm text-gray-800">Hello! I can help you understand this research paper better. What would you like to know?</p>
+    </div>
+  </div>
+
+  <div id="loadingIndicator" class="hidden items-center justify-center p-4">
+    <LoadingSpinner size="md" />
+    <span class="ml-2 text-gray-600">AI is thinking...</span>
+  </div>
+
+  <div class="border-t p-4">
+    <div class="flex gap-2">
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Type your message..."
+        class="flex-1 px-4 py-2 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+      <button
+        id="sendMessageBtn"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isResizing = false;
+  let startX: number;
+  let startWidth: number;
+
+  const sidebar = document.getElementById('chatSidebar')!;
+  const resizeHandle = document.getElementById('resizeHandle')!;
+  const closeBtn = document.getElementById('closeChatBtn')!;
+  const chatInput = document.getElementById('chatInput') as HTMLInputElement;
+  const sendMessageBtn = document.getElementById('sendMessageBtn')!;
+  const chatMessages = document.getElementById('chatMessages')!;
+  const loadingIndicator = document.getElementById('loadingIndicator')!;
+
+  // Resize functionality
+  resizeHandle.addEventListener('mousedown', (e) => {
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = sidebar.offsetWidth;
+    document.body.style.cursor = 'ew-resize';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    
+    const width = startWidth - (e.clientX - startX);
+    if (width >= 300 && width <= 600) {
+      sidebar.style.width = `${width}px`;
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizing = false;
+    document.body.style.cursor = 'default';
+  });
+
+  // Close button functionality
+  closeBtn.addEventListener('click', () => {
+    sidebar.classList.remove('translate-x-0');
+    sidebar.classList.add('translate-x-full');
+    document.dispatchEvent(new CustomEvent('chatClosed'));
+  });
+
+  // Chat functionality
+  function addMessage(message: string, isUser: boolean) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `${isUser ? 'ml-auto bg-indigo-600 text-white' : 'bg-indigo-50 text-gray-800'} rounded-lg p-3 max-w-[80%]`;
+    messageDiv.innerHTML = `<p class="text-sm">${message}</p>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  sendMessageBtn.addEventListener('click', () => {
+    const message = chatInput.value.trim();
+    if (message) {
+      addMessage(message, true);
+      chatInput.value = '';
+
+      // Show loading indicator
+      loadingIndicator.classList.remove('hidden');
+      loadingIndicator.classList.add('flex');
+
+      // Send the message to the Flask server running on http://127.0.0.1:5000
+      fetch('http://127.0.0.1:5000/chat', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message })
+      })
+      .then(response => response.json())
+      .then(data => {
+          addMessage(data.response, false);
+      })
+      .catch(error => console.error('Error:', error))
+      .finally(() => {
+        // Hide loading indicator
+        loadingIndicator.classList.add('hidden');
+        loadingIndicator.classList.remove('flex');
+      });
+    }
+  });
+
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendMessageBtn.click();
+    }
+  });
+</script>
