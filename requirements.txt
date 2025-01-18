@@ -1,0 +1,6 @@
+arxiv
+requests
+PyPDF2
+pdfminer.six
+transformers
+torch

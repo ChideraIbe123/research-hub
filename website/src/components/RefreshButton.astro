@@ -1,0 +1,64 @@
+---
+import LoadingSpinner from './LoadingSpinner.astro';
+---
+<button
+  id="refreshButton"
+  class="fixed top-4 right-4 z-10 bg-white p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+  aria-label="Run scripts"
+>
+  <div class="refresh-icon">
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      class="h-6 w-6 text-indigo-600 group-hover:rotate-180 transition-transform duration-500" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        stroke-width="2" 
+        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
+      />
+    </svg>
+  </div>
+  <div class="loading-spinner hidden flex justify-center items-center">
+    <LoadingSpinner size="sm" color="indigo" />
+  </div>
+</button>
+
+<div id="refreshOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-40 hidden flex items-center justify-center">
+  <div class="flex flex-col items-center">
+    <LoadingSpinner size="lg" />
+    <p class="mt-4 text-lg font-medium text-gray-900">Getting Articles...</p>
+  </div>
+</div>
+
+<script>
+  const refreshButton = document.getElementById('refreshButton');
+  const refreshIcon = refreshButton?.querySelector('.refresh-icon');
+  const loadingSpinner = refreshButton?.querySelector('.loading-spinner');
+  const refreshOverlay = document.getElementById('refreshOverlay');
+
+  refreshButton?.addEventListener('click', async () => {
+    // Show loading state
+    refreshIcon?.classList.add('hidden');
+    loadingSpinner?.classList.remove('hidden');
+    refreshOverlay?.classList.remove('hidden');
+    refreshOverlay?.classList.add('flex');
+
+    try {
+      const response = await fetch('http://127.0.0.1:5000/run-scripts', { method: 'POST' });
+      const data = await response.json();
+      console.log('Scripts output:', data);
+    } catch (error) {
+      console.error('Error running scripts:', error);
+    } finally {
+      // Reset button state
+      refreshIcon?.classList.remove('hidden');
+      loadingSpinner?.classList.add('hidden');
+      refreshOverlay?.classList.add('hidden');
+      refreshOverlay?.classList.remove('flex');
+    }
+  });
+</script>
